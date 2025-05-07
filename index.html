@@ -152,7 +152,11 @@
         
         // Mermaid 렌더링 함수
         function renderMermaid() {
-            const code = inputTextarea.value;
+            let code = inputTextarea.value;
+            if (code.startsWith('"') && code.endsWith('"')) {
+                code = code.slice(1, -1);
+            }
+
             errorDisplay.textContent = '';
             
             try {
