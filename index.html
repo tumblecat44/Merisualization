@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid.js 시각화 도구</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .input-section {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        .preview-section {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        textarea {
+            width: 100%;
+            height: 70%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: none;
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .preview-container {
+            height: 100%;
+            overflow: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            background-color: #fafafa;
+        }
+        .error-message {
+            color: #d32f2f;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .examples {
+            margin-top: 20px;
+        }
+        .examples h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .example-btn {
+            background-color: #2196F3;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .example-btn:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="input-section">
+            <h1>Mermaid.js 코드 입력</h1>
+            <textarea id="mermaid-input" placeholder="여기에 Mermaid.js 코드를 입력하세요...">graph TD
+    A[시작] --> B{조건}
+    B -->|Yes| C[프로세스 1]
+    B -->|No| D[프로세스 2]
+    C --> E[종료]
+    D --> E</textarea>
+            <button id="render-btn">시각화 하기</button>
+            <div id="error-display" class="error-message"></div>
+            
+            <div class="examples">
+                <h3>예제:</h3>
+                <button class="example-btn" data-example="flowchart">플로우차트</button>
+                <button class="example-btn" data-example="sequence">시퀀스 다이어그램</button>
+                <button class="example-btn" data-example="class">클래스 다이어그램</button>
+                <button class="example-btn" data-example="gantt">간트 차트</button>
+            </div>
+        </div>
+        <div class="preview-section">
+            <h1>시각화 미리보기</h1>
+            <div class="preview-container">
+                <div id="mermaid-diagram" class="mermaid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mermaid 초기화
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+        
+        // 요소 가져오기
+        const inputTextarea = document.getElementById('mermaid-input');
+        const renderButton = document.getElementById('render-btn');
+        const diagramDiv = document.getElementById('mermaid-diagram');
+        const errorDisplay = document.getElementById('error-display');
+        const exampleButtons = document.querySelectorAll('.example-btn');
+        
+        // 초기 렌더링
+        renderMermaid();
+        
+        // 버튼 클릭 이벤트
+        renderButton.addEventListener('click', renderMermaid);
+        
+        // 예제 버튼 이벤트
+        exampleButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const exampleType = btn.getAttribute('data-example');
+                inputTextarea.value = getExampleCode(exampleType);
+                renderMermaid();
+            });
+        });
+        
+        // Mermaid 렌더링 함수
+        function renderMermaid() {
+            const code = inputTextarea.value;
+            errorDisplay.textContent = '';
+            
+            try {
+                // 기존 다이어그램 요소 제거하고 새로 생성
+                diagramDiv.innerHTML = '';
+                const newDiv = document.createElement('div');
+                newDiv.className = 'mermaid';
+                newDiv.textContent = code;
+                diagramDiv.appendChild(newDiv);
+                
+                // Mermaid 재실행
+                mermaid.init(undefined, '.mermaid');
+            } catch (error) {
+                console.error('Mermaid 렌더링 오류:', error);
+                errorDisplay.textContent = `오류: ${error.message || '알 수 없는 오류가 발생했습니다.'}`;
+                diagramDiv.innerHTML = '<div style="color: red;">다이어그램을 렌더링할 수 없습니다. 코드를 확인해주세요.</div>';
+            }
+        }
+        
+        // 예제 코드 제공 함수
+        function getExampleCode(type) {
+            switch(type) {
+                case 'flowchart':
+                    return `graph TD
+    A[시작] --> B{조건 확인}
+    B -->|Yes| C[프로세스 1]
+    B -->|No| D[프로세스 2]
+    C --> E[종료]
+    D --> E`;
+                
+                case 'sequence':
+                    return `sequenceDiagram
+    participant 사용자
+    participant 시스템
+    participant 데이터베이스
+    
+    사용자->>시스템: 로그인 요청
+    시스템->>데이터베이스: 사용자 정보 조회
+    데이터베이스-->>시스템: 사용자 정보 반환
+    시스템->>사용자: 로그인 성공/실패`;
+                
+                case 'class':
+                    return `classDiagram
+    class Animal {
+        +String name
+        +int age
+        +makeSound()
+    }
+    class Dog {
+        +fetch()
+    }
+    class Cat {
+        +scratch()
+    }
+    Animal <|-- Dog
+    Animal <|-- Cat`;
+                
+                case 'gantt':
+                    return `gantt
+    title 프로젝트 일정
+    dateFormat  YYYY-MM-DD
+    section 계획
+    요구사항 분석    :a1, 2023-01-01, 7d
+    디자인          :a2, after a1, 5d
+    section 개발
+    백엔드 개발     :a3, after a2, 10d
+    프론트엔드 개발  :a4, after a2, 8d
+    section 테스트
+    통합 테스트     :a5, after a3, 5d`;
+                
+                default:
+                    return `graph TD
+    A[시작] --> B{조건}
+    B -->|Yes| C[프로세스 1]
+    B -->|No| D[프로세스 2]
+    C --> E[종료]
+    D --> E`;
+            }
+        }
+    </script>
+</body>
+</html>
